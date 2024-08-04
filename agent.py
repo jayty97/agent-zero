@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-import time, importlib, inspect, os, json
+import time, importlib, inspect, os, json, sys
 from typing import Any, Optional, Dict, List
 from python.helpers import extract_tools, rate_limiter, files, errors
 from python.helpers.print_style import PrintStyle
@@ -58,6 +58,13 @@ class Agent:
         self.rate_limiter = rate_limiter.RateLimiter(max_calls=self.config.rate_limit_requests,max_input_tokens=self.config.rate_limit_input_tokens,max_output_tokens=self.config.rate_limit_output_tokens,window_seconds=self.config.rate_limit_seconds)
         self.data = {}
         os.chdir(files.get_abs_path("./work_dir"))
+
+    def get_memory_context(self) -> str:
+        return self.fetch_memories(True)
+
+    def is_interruptible(self) -> bool:
+        return True
+
     def process_dreamteam_request(self, query: str):
         if self.config.dreamteam_model1 is None or self.config.dreamteam_model2 is None:
             return None
@@ -73,15 +80,21 @@ class Agent:
 
     def consult_dreamteam(self, query: str):
         try:
+            PrintStyle(bold=True, font_color="blue").print(f"Creating DreamTeam for query: {query}")
             dreamteam = self.create_dreamteam()
-            return dreamteam.collaborate(query)
+            PrintStyle(font_color="blue").print(f"DreamTeam created with models: {dreamteam.model1}, {dreamteam.model2}")
+            
+            PrintStyle(bold=True, font_color="blue").print("Sending query to DreamTeam")
+            response = dreamteam.collaborate(query)
+            
+            return response
         except Exception as e:
             error_message = f"Error during DreamTeam consultation: {str(e)}"
             PrintStyle(font_color="red").print(error_message)
             return self.handle_dreamteam_error(error_message)
 
     def create_dreamteam(self):
-        return DreamTeam(self.config.dreamteam_model1, self.config.dreamteam_model2)
+        return DreamTeam(self.config.dreamteam_model1, self.config.dreamteam_model2, self)
 
     def handle_dreamteam_error(self, error_message: str):
         fallback_response = f"I encountered an issue while consulting the DreamTeam: {error_message}. " \
@@ -108,8 +121,14 @@ class Agent:
             big_brain_agent = self.create_big_brain_agent()
             PrintStyle(font_color="blue").print(f"BigBrainAgent created with model: {big_brain_agent.config.chat_model}")
             
+            # Get the full conversation history
+            full_history = self.concat_messages(self.history)
+            
+            # Combine the full history with the new query
+            full_query = f"Previous conversation:\n{full_history}\n\nNew query: {query}\n\nPlease analyze the context and answer the query."
+            
             PrintStyle(bold=True, font_color="blue").print("Sending query to BigBrainAgent")
-            response = big_brain_agent.message_loop(query)
+            response = big_brain_agent.message_loop(full_query)
             PrintStyle(font_color="blue").print(f"Received response from BigBrainAgent: {response[:100]}...")  # Log first 100 chars
             
             processed_response = self.process_big_brain_response(response)
@@ -122,9 +141,10 @@ class Agent:
             return self.handle_big_brain_error(error_message)
 
     def process_big_brain_response(self, response: str):
-        processed_response = f"BigBrain Analysis: {response}\n\nBased on this analysis, I will..."
-        self.append_message(processed_response)
-        return processed_response
+        # Remove any potential "BigBrain Analysis:" prefix from the response
+        if response.startswith("BigBrain Analysis:"):
+            response = response[len("BigBrain Analysis:"):].strip()
+        return response
 
     def handle_big_brain_error(self, error_message: str):
         fallback_response = f"I encountered an issue while consulting the BigBrain Agent: {error_message}. " \
@@ -137,7 +157,7 @@ class Agent:
             chat_model=self.config.big_brain_model,
             utility_model=self.config.utility_model,
             embeddings_model=self.config.embeddings_model,
-            big_brain_model=self.config.big_brain_model,
+            big_brain_model=None,  # Prevent recursive BigBrain creation
             memory_subdir=self.config.memory_subdir,
             auto_memory_count=self.config.auto_memory_count,
             auto_memory_skip=self.config.auto_memory_skip,
@@ -409,116 +429,6 @@ class Agent:
     def call_extension(self, name: str, **kwargs) -> Any:
         pass
 
-    def process_bigbrain_request(self, query: str):
-        if self.config.big_brain_model is None:
-            return None
-        if "consult bigbrain" in query.lower():
-            actual_query = query.lower().replace("consult bigbrain", "").strip()
-            big_brain_response = self.consult_big_brain(actual_query)
-            return f"BigBrain Agent Response:\n{big_brain_response}"
-        elif query.lower().startswith("!bigbrain"):
-            actual_query = query[9:].strip()
-            big_brain_response = self.consult_big_brain(actual_query)
-            return f"BigBrain Agent Response:\n{big_brain_response}"
-        return None
-
-def consult_dreamteam(self, query: str):
-    try:
-        PrintStyle(bold=True, font_color="blue").print(f"Creating DreamTeam for query: {query}")
-        dreamteam = self.create_dreamteam()
-        PrintStyle(font_color="blue").print(f"DreamTeam created with models: {dreamteam.model1}, {dreamteam.model2}")
-        
-        PrintStyle(bold=True, font_color="blue").print("Sending query to DreamTeam")
-        response = dreamteam.collaborate(query)
-        
-        return response
-    except Exception as e:
-        error_message = f"Error during DreamTeam consultation: {str(e)}"
-        PrintStyle(font_color="red").print(error_message)
-        return self.handle_dreamteam_error(error_message)
-
-def process_big_brain_response(self, response: str):
-        processed_response = f"BigBrain Analysis: {response}\n\nBased on this analysis, I will..."
-        self.append_message(processed_response)
-        return processed_response
-
-def handle_big_brain_error(self, error_message: str):
-        fallback_response = f"I encountered an issue while consulting the BigBrain Agent: {error_message}. " \
-                            f"I'll proceed with my own analysis to the best of my abilities."
-        self.append_message(fallback_response)
-        return fallback_response
-
-def create_big_brain_agent(self):
-        big_brain_config = AgentConfig(
-            chat_model=self.config.big_brain_model,
-            utility_model=self.config.utility_model,
-            embeddings_model=self.config.embeddings_model,
-            big_brain_model=self.config.big_brain_model,
-            memory_subdir=self.config.memory_subdir,
-            auto_memory_count=self.config.auto_memory_count,
-            auto_memory_skip=self.config.auto_memory_skip,
-            rate_limit_seconds=self.config.rate_limit_seconds,
-            rate_limit_requests=self.config.rate_limit_requests,
-            rate_limit_input_tokens=self.config.rate_limit_input_tokens,
-            rate_limit_output_tokens=self.config.rate_limit_output_tokens,
-            msgs_keep_max=self.config.msgs_keep_max,
-            msgs_keep_start=self.config.msgs_keep_start,
-            msgs_keep_end=self.config.msgs_keep_end,
-            response_timeout_seconds=self.config.response_timeout_seconds,
-            max_tool_response_length=self.config.max_tool_response_length,
-            code_exec_docker_enabled=self.config.code_exec_docker_enabled,
-            code_exec_docker_name=self.config.code_exec_docker_name,
-            code_exec_docker_image=self.config.code_exec_docker_image,
-            code_exec_docker_ports=self.config.code_exec_docker_ports,
-            code_exec_docker_volumes=self.config.code_exec_docker_volumes,
-            code_exec_ssh_enabled=self.config.code_exec_ssh_enabled,
-            code_exec_ssh_addr=self.config.code_exec_ssh_addr,
-            code_exec_ssh_port=self.config.code_exec_ssh_port,
-            code_exec_ssh_user=self.config.code_exec_ssh_user,
-            code_exec_ssh_pass=self.config.code_exec_ssh_pass,
-            additional=self.config.additional
-        )
-        return BigBrainAgent(number=self.number + 1, config=big_brain_config)
-
-def process_dreamteam_request(self, query: str):
-        if self.config.dreamteam_model1 is None or self.config.dreamteam_model2 is None:
-            return None
-        if "consult dreamteam" in query.lower():
-            actual_query = query.lower().replace("consult dreamteam", "").strip()
-            dreamteam_response = self.consult_dreamteam(actual_query)
-            return f"DreamTeam Response:\n{dreamteam_response}"
-        elif query.lower().startswith("!dreamteam"):
-            actual_query = query[10:].strip()
-            dreamteam_response = self.consult_dreamteam(actual_query)
-            return f"DreamTeam Response:\n{dreamteam_response}"
-        return None
-
-def consult_dreamteam(self, query: str):
-    try:
-        print(f"Creating DreamTeam for query: {query}")
-        dreamteam = self.create_dreamteam()
-        print(f"DreamTeam created with models: {dreamteam.model1}, {dreamteam.model2}")
-        
-        print("Sending query to DreamTeam")
-        response = dreamteam.collaborate(query)
-        print("Received response from DreamTeam:")
-        print(response)  # This will now print the full conversation
-        
-        return response
-    except Exception as e:
-        error_message = f"Error during DreamTeam consultation: {str(e)}"
-        print(error_message)
-        return self.handle_dreamteam_error(error_message)
-
-def handle_dreamteam_error(self, error_message: str):
-        fallback_response = f"I encountered an issue while consulting the DreamTeam: {error_message}. " \
-                            f"I'll proceed with my own analysis to the best of my abilities."
-        self.append_message(fallback_response)
-        return fallback_response
-
-def create_dreamteam(self):
-        return DreamTeam(self.config.dreamteam_model1, self.config.dreamteam_model2)
-
 class BigBrainAgent(Agent):
     def __init__(self, number: int, config: AgentConfig):
         super().__init__(number, config)
@@ -532,23 +442,25 @@ class BigBrainAgent(Agent):
         print(f"BigBrainAgent response: {response[:100]}...")  # Log first 100 chars
         return response
 
-from python.helpers.print_style import PrintStyle
-import sys
-import time
-
 class DreamTeam:
-    def __init__(self, model1: BaseChatModel, model2: BaseChatModel):
+    def __init__(self, model1: BaseChatModel, model2: BaseChatModel, agent: Agent):
         self.model1 = model1
         self.model2 = model2
+        self.agent = agent
         self.conversation_history: List[Dict[str, Any]] = []
 
     def collaborate(self, query: str, max_turns: int = 3) -> str:
         self.conversation_history = []
-        self._add_to_history("Human", query)
+        context = self.agent.get_memory_context()
+        query_with_context = f"Context:\n{context}\n\nQuery: {query}"
+        self._add_to_history("Human", query_with_context)
         
         PrintStyle(bold=True, font_color="cyan").print(f"DreamTeam Collaboration on query: {query}\n")
 
         for turn in range(max_turns):
+            if self.agent.is_interruptible() and self.agent.handle_intervention():
+                break
+
             PrintStyle(bold=True, font_color="yellow").print(f"Model 1 (Turn {turn + 1}) thinking", end='')
             self._animate_thinking()
             response1 = self._get_model_response(self.model1, f"Model 1 (Turn {turn + 1})")
@@ -556,6 +468,9 @@ class DreamTeam:
             self._add_to_history("Model 1", response1)
             PrintStyle(bold=True, font_color="yellow").print(f"Model 1 (Turn {turn + 1}):")
             PrintStyle(font_color="yellow").print(f"{response1}\n")
+
+            if self.agent.is_interruptible() and self.agent.handle_intervention():
+                break
 
             PrintStyle(bold=True, font_color="green").print(f"Model 2 (Turn {turn + 1}) thinking", end='')
             self._animate_thinking()
