@@ -1,5 +1,6 @@
 import os, webcolors, html
 import sys
+import codecs
 from datetime import datetime
 from . import files
 
@@ -22,7 +23,7 @@ class PrintStyle:
             os.makedirs(logs_dir, exist_ok=True)
             log_filename = datetime.now().strftime("log_%Y%m%d_%H%M%S.html")
             PrintStyle.log_file_path = os.path.join(logs_dir, log_filename)
-            with open(PrintStyle.log_file_path, "w") as f:
+            with codecs.open(PrintStyle.log_file_path, "w", encoding="utf-8") as f:
                 f.write("<html><body style='background-color:black;font-family: Arial, Helvetica, sans-serif;'><pre>\n")
 
     def _get_rgb_color_code(self, color, is_background=False):
@@ -81,14 +82,20 @@ class PrintStyle:
             self.padding_added = True
 
     def _log_html(self, html):
-        with open(PrintStyle.log_file_path, "a") as f: # type: ignore
-            f.write(html)
+        try:
+            with codecs.open(PrintStyle.log_file_path, "a", encoding="utf-8") as f:
+                f.write(html)
+        except Exception as e:
+            print(f"Error writing to log file: {str(e)}")
 
     @staticmethod
     def _close_html_log():
         if PrintStyle.log_file_path:
-            with open(PrintStyle.log_file_path, "a") as f:
-                f.write("</pre></body></html>")            
+            try:
+                with codecs.open(PrintStyle.log_file_path, "a", encoding="utf-8") as f:
+                    f.write("</pre></body></html>")
+            except Exception as e:
+                print(f"Error closing HTML log: {str(e)}")
 
     def get(self, *args, sep=' ', **kwargs):
         text = sep.join(map(str, args))

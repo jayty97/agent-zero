@@ -18,7 +18,7 @@ def initialize():
     # chat_llm = models.get_groq_llama70b_json(temperature=0.2)
     # chat_llm = models.get_groq_llama8b(temperature=0.2)
     # chat_llm = models.get_openai_gpt35(temperature=0)
-    # chat_llm = models.get_openai_gpt4o(temperature=0)
+    # chat_llm = models.get_openai_gpt4(temperature=0)
     # chat_llm = models.get_openai_chat(temperature=0)
     chat_llm = models.get_openai_chat(model="gpt-4o-mini-2024-07-18", temperature=0)
     # chat_llm = models.get_anthropic_opus(temperature=0)
@@ -42,9 +42,14 @@ def initialize():
     # embedding_llm = models.get_embedding_hf()
     print(f"Initialized embedding model: {embedding_llm}")
 
-    # Initialize the BigBrain model
+    # Initialize the BigBrain model (optional)
     big_brain_llm = models.get_anthropic_sonnet_35(temperature=0)  
     print(f"Initialized BigBrain model: {big_brain_llm}")
+
+    # Initialize the DreamTeam models
+    dreamteam_model1 = models.get_anthropic_sonnet_35(temperature=0)
+    dreamteam_model2 = chat_llm = models.get_openai_gpt4(temperature=0)
+    print(f"Initialized DreamTeam models: {dreamteam_model1}, {dreamteam_model2}")
 
     print("Setting up agent configuration...")
     config = AgentConfig(
@@ -52,6 +57,8 @@ def initialize():
         utility_model = utility_llm,
         embeddings_model = embedding_llm,
         big_brain_model = big_brain_llm,
+        dreamteam_model1 = dreamteam_model1,
+        dreamteam_model2 = dreamteam_model2,
         # memory_subdir = "",
         auto_memory_count = 0,
         # auto_memory_skip = 2,

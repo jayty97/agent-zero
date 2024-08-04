@@ -38,7 +38,7 @@ def get_openai_gpt35(api_key=None, temperature=DEFAULT_TEMPERATURE):
     api_key = api_key or get_api_key("openai")
     return ChatOpenAI(model_name="gpt-3.5-turbo", temperature=temperature, api_key=api_key) # type: ignore
 
-def get_openai_chat(api_key=None, model="gpt-4o-mini", temperature=DEFAULT_TEMPERATURE):
+def get_openai_chat(api_key=None, model="gpt-4o-mini-2024-07-18", temperature=DEFAULT_TEMPERATURE):
     api_key = api_key or get_api_key("openai")
     return ChatOpenAI(model_name=model, temperature=temperature, api_key=api_key) # type: ignore
 
@@ -50,9 +50,9 @@ def get_openai_gpt4(api_key=None, temperature=DEFAULT_TEMPERATURE):
     api_key = api_key or get_api_key("openai")
     return ChatOpenAI(model_name="gpt-4-0125-preview", temperature=temperature, api_key=api_key) # type: ignore
 
-def get_openai_gpt4o(api_key=None, temperature=DEFAULT_TEMPERATURE):
+def get_openai_gpt4omini(api_key=None, temperature=DEFAULT_TEMPERATURE):
     api_key = api_key or get_api_key("openai")
-    return ChatOpenAI(model_name="gpt-4o", temperature=temperature, api_key=api_key) # type: ignore
+    return ChatOpenAI(model_name="gpt-4o-mini", temperature=temperature, api_key=api_key) # type: ignore
 
 def get_groq_mixtral7b(api_key=None, temperature=DEFAULT_TEMPERATURE):
     api_key = api_key or get_api_key("groq")
@@ -98,3 +98,12 @@ def get_embedding_openai(api_key=None):
 def get_big_brain_model(api_key=None, temperature=DEFAULT_TEMPERATURE):
     api_key = api_key or get_api_key("openai")
     return ChatOpenAI(model_name="gpt-4-1106-preview", temperature=temperature, api_key=api_key)  # type: ignore
+
+# New functions for DreamTeam models
+def get_dreamteam_model1(api_key=None, temperature=DEFAULT_TEMPERATURE):
+    api_key = api_key or get_api_key("anthropic")
+    return ChatAnthropic(model_name="claude-3-opus-20240229", temperature=temperature, api_key=api_key)  # type: ignore
+
+def get_dreamteam_model2(api_key=None, temperature=DEFAULT_TEMPERATURE):
+    api_key = api_key or get_api_key("openai")
+    return ChatOpenAI(model_name="gpt-4-0125-preview", temperature=temperature, api_key=api_key)  # type: ignore
