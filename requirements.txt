@@ -1,4 +1,4 @@
-Copyansio==0.0.1
+ansio==0.0.1
 python-dotenv==1.0.1
 langchain-groq==0.1.6
 langchain-huggingface==0.0.3
@@ -13,5 +13,3 @@ docker==7.1.0
 paramiko==3.4.0
 duckduckgo_search==6.1.12
 inputimeout==1.0.4
-PyQt6==6.5.0
-PyQtChart==6.5.0
