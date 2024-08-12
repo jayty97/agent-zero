@@ -1,0 +1,113 @@
+# Agent Zero GUI
+
+Agent Zero GUI is a powerful and extensible interface for AI agents, designed to facilitate interaction between users and AI models. It provides a rich set of features for managing conversations, tools, and projects.
+
+## Features
+
+- **Chat Interface**: Engage in conversations with AI agents through a user-friendly chat display.
+- **Tool Management**: Create, edit, activate, and deactivate custom tools to extend the agent's capabilities.
+- **Project Management**: Create, save, and load projects to organize your work.
+- **File Management**: Upload and manage files within your projects.
+- **Settings Panel**: Configure AI models and other system settings.
+- **Prompt Management**: Create and manage custom prompts for quick insertion into conversations.
+
+DreamTeam agent classes in the Agent Zero framework:
+
+BigBrain Agent:
+The BigBrain agent is a single, more advanced agent that can be called upon to handle complex tasks or provide deeper insights. It's designed to have a broader knowledge base and more sophisticated reasoning capabilities compared to the main agent.
+DreamTeam Agents:
+The DreamTeam consists of two specialized agents working in tandem. These agents are designed to collaborate on tasks, each bringing a unique perspective or set of skills to the problem-solving process.
+
+Instructions for using BigBrain and DreamTeam agents:
+
+BigBrain Agent:
+a. Activation:
+
+Type your prompt, then click the "Call BigBrain" button in the GUI, or
+Type a message prefixed with "[BigBrain]" in the input field.
+
+b. Usage:
+
+Use BigBrain for complex queries, abstract reasoning, or when you need a more comprehensive analysis.
+Example: "[BigBrain] Can you provide an in-depth analysis of the economic impacts of renewable energy adoption?"
+
+c. Interaction:
+
+BigBrain will process your query and provide a more detailed or insightful response compared to the main agent.
+You can follow up with additional questions or requests for clarification.
+
+
+DreamTeam Agents:
+a. Activation:
+
+Type your prompt, then click the "Call DreamTeam" button in the GUI, or
+Type a message prefixed with "[DreamTeam]" in the input field.
+
+b. Usage:
+
+Use DreamTeam when you want multiple perspectives on a problem or when tackling multi-faceted issues.
+Example: "[DreamTeam] What are the pros and cons of implementing a four-day work week, considering both employee well-being and business productivity?"
+
+c. Interaction:
+
+DreamTeam Agent 1 will first process your query and provide a response.
+DreamTeam Agent 2 will then consider both your original query and Agent 1's response to provide a second, potentially complementary or contrasting perspective.
+The combined response from both agents will be presented to you.
+You can continue the conversation by asking follow-up questions or requesting further elaboration on specific points raised by either agent.
+
+
+
+General Tips:
+
+Be specific in your queries to get the most out of these specialized agents.
+Use BigBrain when you need a single, comprehensive answer to a complex question.
+Use DreamTeam when you want to explore different angles of a problem or when you need a more balanced perspective on a topic.
+You can switch between using the main agent, BigBrain, and DreamTeam within the same conversation to leverage their different strengths.
+Remember that while these agents have enhanced capabilities, they are still bound by the limitations of their training data and the AI models they're based on.
+
+By utilizing BigBrain and DreamTeam agents effectively, you can tackle a wider range of problems and get more nuanced insights from the Agent Zero system. These specialized agents complement the main agent's capabilities, allowing for a more versatile and powerful AI assistant experience.
+
+## Setup and Installation
+
+1. Clone the repository:
+git clone https://github.com/yourusername/agent-zero-gui.git
+cd agent-zero-gui
+
+2. Create a virtual environment and activate it:
+python -m venv venv
+source venv/bin/activate  # On Windows, use venv\Scripts\activate
+
+3. Install the required dependencies:
+pip install -r requirements.txt
+
+4. Set up your environment variables:
+- Copy the `example.env` file to `.env`
+- Edit `.env` and add your API keys for various services (e.g., OpenAI, Anthropic)
+
+5. Run the application:
+python agent_zero_gui.py
+
+## Usage
+
+### Chat Interface
+- Type your messages in the input box at the bottom of the chat display.
+- Use the "Send" button or press Enter to send your message.
+- The agent's responses will appear in the chat display.
+
+### Tool Management
+- Navigate to the "Tools" tab to manage your custom tools.
+- Click "Add Tool" to create a new tool.
+- Select a tool and click "Edit" to modify its script.
+- Use the "Activate" and "Deactivate" buttons to control tool availability.
+- Right-click on a tool for additional options (Copy, Delete).
+
+### Project Management
+- Use the "File" menu to create, open, save, and close projects.
+- Projects organize your conversations, files, and tool configurations.
+
+### File Management
+- Use the "Files" tab to upload and manage files within your project.
+
+### Settings
+
+

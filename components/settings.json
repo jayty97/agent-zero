@@ -1,0 +1,1 @@
+{"models": {"Chat": "", "Utility": "", "Embedding": "GPT-4o-mini", "BigBrain": "", "DreamTeam1": "", "DreamTeam2": "GPT-4"}, "api_keys": {"Chat": "", "Utility": "", "Embedding": "", "BigBrain": "", "DreamTeam1": "", "DreamTeam2": ""}, "temperatures": {"Chat": 0.7, "Utility": 0.7, "Embedding": 0.6, "BigBrain": 0.7, "DreamTeam1": 0.7, "DreamTeam2": 0.7}}

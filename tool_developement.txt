@@ -1,0 +1,142 @@
+# Tool Development Guide for Agent Zero
+
+## Injection Points and Tool Structure
+
+Tools in Agent Zero are Python scripts that can be dynamically loaded and executed. Each tool script should define three main functions that serve as injection points:
+
+1. `activate()`
+2. `deactivate()`
+3. `execute(*args, **kwargs)`
+
+### 1. Activation Injection Point: `activate()`
+
+The `activate()` function is called when a tool is activated through the GUI. Use this function to set up any necessary resources, initialize connections, or perform any setup tasks required for your tool.
+
+Example:
+
+```python
+def activate():
+    print("WeatherTool activated")
+    global api_key
+    api_key = "your_weather_api_key_here"
+    # You could also load the API key from a config file or environment variable
+
+2. Deactivation Injection Point: deactivate()
+The deactivate() function is called when a tool is deactivated through the GUI. Use this function to clean up resources, close connections, or perform any necessary teardown tasks.
+Example:
+pythonCopydef deactivate():
+    print("WeatherTool deactivated")
+    global api_key
+    api_key = None
+    # You could also perform cleanup of any open connections or resources
+
+3. Execution Injection Point: execute(*args, **kwargs)
+The execute() function is the main entry point for your tool's functionality. It's called when the agent uses the tool. This function should accept any necessary arguments and return the result of the tool's operation.
+Example:
+pythonCopyimport requests
+
+def execute(city):
+    global api_key
+    if not api_key:
+        return "Weather tool is not properly activated or configured."
+    
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return f"The current temperature in {city} is {data['main']['temp']}°C with {data['weather'][0]['description']}."
+    else:
+        return f"Error fetching weather data for {city}."
+Accessing Agent and GUI Components
+Tools can access certain components of the Agent Zero system through global variables. However, it's important to note that these should be used carefully to maintain the integrity of the system.
+
+agent: The current Agent instance
+gui: The main AgentZeroGUI instance
+
+Example of using the agent variable:
+pythonCopydef execute(query):
+    global agent
+    context = agent.get_context()
+    # Use the context in your tool's logic
+    return f"Processed query '{query}' with context: {context}"
+
+Full Example: Web Search Tool
+
+Here's a complete example of a web search tool that demonstrates all injection points and uses an external API:
+
+pythonCopy# Tool: WebSearch
+# Description: Performs a web search using the DuckDuckGo API
+
+import requests
+
+SEARCH_URL = "https://api.duckduckgo.com/"
+session = None
+
+def activate():
+    global session
+    print("WebSearch tool activated")
+    session = requests.Session()
+
+def deactivate():
+    global session
+    print("WebSearch tool deactivated")
+    if session:
+        session.close()
+        session = None
+
+def execute(query, num_results=3):
+    global session
+    if not session:
+        return "WebSearch tool is not activated."
+    
+    params = {
+        'q': query,
+        'format': 'json',
+        'no_html': 1,
+        'no_redirect': 1,
+    }
+    
+    try:
+        response = session.get(SEARCH_URL, params=params)
+        data = response.json()
+        
+        results = []
+        for result in data.get('RelatedTopics', [])[:num_results]:
+            if 'Text' in result:
+                results.append(result['Text'])
+        
+        if results:
+            return "\n".join(f"{i+1}. {result}" for i, result in enumerate(results))
+        else:
+            return f"No results found for '{query}'."
+    except Exception as e:
+        return f"Error performing web search: {str(e)}"
+
+# Example usage in the agent's system:
+
+# result = execute("Python programming", num_results=5)
+
+# print(result)
+
+Best Practices for Tool Development
+
+Error Handling: Always include robust error handling in your tools to prevent crashes and provide informative error messages.
+
+Resource Management: Properly manage resources in the activate() and deactivate() functions to prevent leaks.
+
+Argument Validation: Validate input arguments in the execute() function to ensure your tool receives the expected data.
+
+Documentation: Include a clear description of your tool and its usage in the script comments.
+Modularity: Keep your tools focused on a single task or a closely related set of tasks.
+
+Security: Be cautious when handling sensitive data or making external API calls. Never hardcode sensitive information like API keys directly in the tool script.
+
+Performance: For long-running operations, consider implementing a way to report progress or allow interruption.
+
+Compatibility: Ensure your tool is compatible with the current version of Agent Zero and any libraries it depends on.
+
+Using Your Tool
+Once your tool is developed and placed in the tools directory, you can activate it through the Agent Zero GUI. The agent can then use the tool by calling:
+pythonCopyresult = agent.execute_tool("WebSearch", "Python programming", num_results=5)
+This will execute the WebSearch tool with the given arguments and return the result, which the agent can then process or relay to the user.
+
